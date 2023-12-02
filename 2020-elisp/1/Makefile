@@ -7,5 +7,3 @@ solve-a:
 
 solve-b:
 	emacs --batch -l solution-b.el
-
-
