@@ -17,7 +17,6 @@
       (setq y (+ delta-y y)))
     tree-count))
 
-
 (let* ((map-grid (read-file-into-repeated-grid "input.txt" 100))
        (path-1 (count-trees-in-path map-grid 1 1))
        (path-2 (count-trees-in-path map-grid 3 1))
