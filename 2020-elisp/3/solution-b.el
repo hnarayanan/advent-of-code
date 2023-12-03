@@ -25,9 +25,3 @@
        (path-4 (count-trees-in-path map-grid 7 1))
        (path-5 (count-trees-in-path map-grid 1 2)))
   (message "%d" (* path-1 path-2 path-3 path-4 path-5)))
-
-
-;; (let ((map-grid (read-file-into-repeated-grid "input.txt" 100)))
-;;   (message "%d" (count-trees-in-path map-grid 1 2)))
-
-
