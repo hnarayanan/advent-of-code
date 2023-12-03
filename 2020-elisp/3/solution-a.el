@@ -1,0 +1,22 @@
+(defun read-file-into-repeated-grid (filename times)
+  (with-temp-buffer
+    (insert-file-contents filename)
+    (let ((lines (mapcar (lambda (line) (apply 'concat (make-list times line)))
+                         (split-string (buffer-string) "\n" t))))
+      lines)))
+
+(defun count-trees-in-path (map-grid)
+  (let ((tree-count 0)
+        (x 3)
+        (y 1))
+    (dotimes (i (- (length map-grid) 1))
+      (let ((content-at-position (string (aref (nth y map-grid) x))))
+        (print content-at-position)
+        (if (equal content-at-position "#")
+            (setq tree-count (1+ tree-count))))
+      (setq x (+ 3 x))
+      (setq y (+ 1 y)))
+    tree-count))
+
+(let ((map-grid (read-file-into-repeated-grid "input.txt" 100)))
+  (message "%d" (count-trees-in-path map-grid)))
