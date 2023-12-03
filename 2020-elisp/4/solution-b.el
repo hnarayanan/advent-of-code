@@ -29,7 +29,6 @@
               (setq valid t)))))
     valid))
 
-
 (defun valid-hcl? (str)
   (string-match-p "#[0-9a-fA-F]\\{6\\}" str))
 
