@@ -11,7 +11,6 @@
         (y 1))
     (dotimes (i (- (length map-grid) 1))
       (let ((content-at-position (string (aref (nth y map-grid) x))))
-        (print content-at-position)
         (if (equal content-at-position "#")
             (setq tree-count (1+ tree-count))))
       (setq x (+ 3 x))
