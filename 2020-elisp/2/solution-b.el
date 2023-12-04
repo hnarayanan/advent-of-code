@@ -9,9 +9,6 @@
             (mapcar (lambda (str) (split-string str ":" t))
                     (split-string (buffer-string) "\n" t)))))
 
-(defun xor (a b)
-  (if a (not b) b))
-
 (defun verify-password (rule-and-password)
   (setq position-1 (- (nth 0 (nth 0 rule-and-password)) 1))
   (setq position-2 (- (nth 1 (nth 0 rule-and-password)) 1))
