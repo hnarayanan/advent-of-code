@@ -45,14 +45,18 @@ the seat (based on the column and row numbers."
 
     (+ (* row 8) col)))
 
-(defun identify-highest-seat-id (all-seat-codes)
-  "Go through all seat codes and find the one with the highest ID"
+(defun identify-all-seat-ids (all-seat-codes)
+  "Map all seat codes to their seat ids"
   (let ((seat-ids '()))
     (while all-seat-codes
       (setq seat-code (car all-seat-codes))
       (push (identify-seat-id seat-code) seat-ids)
       (setq all-seat-codes (cdr all-seat-codes)))
-    (apply #'max seat-ids)))
+    seat-ids))
+
+(defun identify-highest-seat-id (all-seat-codes)
+  "Go through all seat codes and find the one with the highest ID"
+    (apply #'max (identify-all-seat-ids all-seat-codes)))
 
 (let ((all-seat-codes (read-seat-codes-data "input.txt")))
   (message "%d" (identify-highest-seat-id all-seat-codes)))
