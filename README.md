@@ -9,8 +9,6 @@ And it‘s so fun!
 
 Here are some of my experiments with it.
 
-
-
 This is not really meant for general consumption. But if you‘re truly
 interested, you can navigate into a given year and date, e.g.
 `2020-elisp/1/` and run `make`. It will spit out the solutions to that

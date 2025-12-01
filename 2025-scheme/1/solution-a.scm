@@ -1,8 +1,8 @@
 #!/usr/bin/env -S guile -s
 !#
 
-(use-modules (ice-9 rdelim))
-(use-modules (ice-9 format))
+(use-modules (ice-9 rdelim)
+             (ice-9 format))
 
 ;; Given an input file, return a list of turns
 (define (file->turns path)
@@ -31,11 +31,7 @@
 ;;   pointer > 99, replace it with pointer - 100,
 ;;   pointer < 0, replace it with 99 + pointer
 (define (looped+ pointer delta)
-  (let ((pointer (+ pointer delta)))
-    (cond
-     ((> pointer 99) (- pointer 100))
-     ((< pointer 0) (+ pointer 100))
-     (#t pointer))))
+  (modulo (+ pointer delta) 100))
 
 ;; Fetch turns from the file to loop over
 (define turns (file->turns "input.txt"))
