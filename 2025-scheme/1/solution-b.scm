@@ -35,7 +35,7 @@
 
 ;; Let's make a looped add function, that when:
 ;;   pointer > 99, replace it with pointer - 100,
-;;   pointer < 0, replace it with 99 + pointer
+;;   pointer < 0, replace it with 100 + pointer
 ;; In both these cases, since we crossed the 0 mark, we increment
 ;; the counter
 (define (looped+ pointer delta)
@@ -64,8 +64,7 @@
              (cross-inc (cdr loop-result))
              (new-counter (+ counter count-inc cross-inc))
              (final-counter (if (zero? new-pointer)
-                                (begin
-                                  (1+ new-counter))
+                                (1+ new-counter)
                                 new-counter)))
         (format #t "The dial is rotated ~a to point at ~a.~%" turn new-pointer)
         (process-turns (cdr turns) new-pointer final-counter))))

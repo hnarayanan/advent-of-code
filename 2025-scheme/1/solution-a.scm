@@ -29,7 +29,7 @@
 
 ;; Let's make a looped add function, that when:
 ;;   pointer > 99, replace it with pointer - 100,
-;;   pointer < 0, replace it with 99 + pointer
+;;   pointer < 0, replace it with 100 + pointer
 (define (looped+ pointer delta)
   (modulo (+ pointer delta) 100))
 
