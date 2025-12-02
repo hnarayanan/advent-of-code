@@ -14,20 +14,24 @@
               (reverse turns)
               (loop (cons turn turns))))))))
 
-;; Given a turn, try to find the delta we need to move the pointer
+;; Given a turn, try to find the delta we need to move the pointer. As
+;; we do this, make a note of any overall counter changes.
 (define (get-sign turn)
   (cond ((char=? (string-ref turn 0) #\R) 1)
         ((char=? (string-ref turn 0) #\L) -1)))
 
 (define (get-looped-magnitude turn)
   (let ((magnitude (string->number (substring turn 1 (string-length turn)))))
-    (set! counter (+ counter (quotient magnitude 100)))
-    (modulo magnitude 100)))
+    (cons (modulo magnitude 100)
+          (quotient magnitude 100))))
 
 (define (turn->delta turn)
-  (let ((sign (get-sign turn))
-        (magnitude (get-looped-magnitude turn)))
-    (* sign magnitude)))
+  (let* ((sign (get-sign turn))
+         (mag-result (get-looped-magnitude turn))
+         (magnitude (car mag-result))
+         (count-inc (cdr mag-result)))
+    (cons (* sign magnitude)
+          count-inc)))
 
 ;; Let's make a looped add function, that when:
 ;;   pointer > 99, replace it with pointer - 100,
@@ -62,7 +66,10 @@
 ;; If it's at 0, increment the counter
 (for-each
  (lambda (turn)
-   (let ((delta (turn->delta turn)))
+   (let* ((delta-result (turn->delta turn))
+          (delta (car delta-result))
+          (count-inc (cdr delta-result)))
+     (set! counter (+ counter count-inc))
      (set! pointer (looped+ pointer delta))
      (when (zero? pointer)
        (display "The pointer is 0.")
