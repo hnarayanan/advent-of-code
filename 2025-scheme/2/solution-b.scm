@@ -42,21 +42,11 @@
 
 ;; Check if all given strings are equal
 (define (all-equal? strings)
-  (let ((first (car strings)))
-    (define (check remaining)
-      (cond
-       ((null? remaining) #t)
-       ((string=? first (car remaining))
-        (check (cdr remaining)))
-       (else #f)))
-    (check (cdr strings))))
+  (apply string=? strings))
 
 ;; Check if any of the splits are equal
 (define (any-equal-split? splits)
-  (cond
-   ((null? splits) #f)
-   ((all-equal? (car splits)) #t)
-   (else (any-equal-split? (cdr splits)))))
+  (any all-equal? splits))
 
 ;; Check if the id is invalid
 (define (invalid? id)
