@@ -42,41 +42,37 @@
   (let ((new-pointer (+ pointer delta)))
     (cond
      ((> new-pointer 99)
-      (unless (or (zero? pointer) (zero? (- new-pointer 100)))
-        (set! counter (1+ counter)))
-      (display "During this rotation it crosses 0 once -- ")
-      (- new-pointer 100))
+      (let ((crosses (if (or (zero? pointer) (zero? (- new-pointer 100))) 0 1)))
+        (cons (- new-pointer 100) crosses)))
      ((< new-pointer 0)
-      (unless (or (zero? pointer) (zero? (+ new-pointer 100)))
-        (set! counter (1+ counter)))
-      (display "During this rotation it crosses 0 once -- ")
-      (+ new-pointer 100))
+      (let ((crosses (if (or (zero? pointer) (zero? (+ new-pointer 100))) 0 1)))
+        (cons (+ new-pointer 100) crosses)))
      (else
-      new-pointer))))
+      (cons new-pointer 0)))))
 
-;; Fetch turns from the file to loop over
+;; Introduce a recursive procedure to loop over the turns and update
+;; the pointer and counter
+(define (process-turns turns pointer counter)
+  (if (null? turns)
+      counter
+      (let* ((turn (car turns))
+             (delta-result (turn->delta turn))
+             (delta (car delta-result))
+             (count-inc (cdr delta-result))
+             (loop-result (looped+ pointer delta))
+             (new-pointer (car loop-result))
+             (cross-inc (cdr loop-result))
+             (new-counter (+ counter count-inc cross-inc))
+             (final-counter (if (zero? new-pointer)
+                                (begin
+                                  (1+ new-counter))
+                                new-counter)))
+        (format #t "The dial is rotated ~a to point at ~a.~%" turn new-pointer)
+        (process-turns (cdr turns) new-pointer final-counter))))
+
+;; Fetch turns from the file to process
 (define turns (file->turns "input.txt"))
 
-;; Start a pointer at 50, counter at 0
-(define pointer 50)
-(define counter 0)
-(format #t "The dial starts by pointing at ~a~%" pointer)
-
-;; For each turn, find the new pointer position
-;; If it's at 0, increment the counter
-(for-each
- (lambda (turn)
-   (let* ((delta-result (turn->delta turn))
-          (delta (car delta-result))
-          (count-inc (cdr delta-result)))
-     (set! counter (+ counter count-inc))
-     (set! pointer (looped+ pointer delta))
-     (when (zero? pointer)
-       (display "The pointer is 0.")
-       (newline)
-       (set! counter (1+ counter)))
-     (format #t "The dial is rotated ~a to point at ~a.~%" turn pointer)))
- turns)
-
-;; Display the result
-(format #t "The password is ~a.~%" counter)
+;; Start the pointer at 50 and process the turns
+(define password (process-turns turns 50 0))
+(format #t "The new password would be ~a.~%" password)
