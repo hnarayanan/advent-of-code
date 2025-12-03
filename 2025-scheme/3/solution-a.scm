@@ -1,7 +1,8 @@
 #!/usr/bin/env -S guile -s
 !#
 
-(use-modules (ice-9 rdelim))
+(use-modules (ice-9 rdelim)
+             (ice-9 format))
 
 ;; Given an input file, return a string representation of battery
 ;; banks
@@ -16,32 +17,31 @@
 
 ;; Write some helpers to convert the strings to list of numbers
 ;; representing the battery banks
-(define char->digit
-  (lambda (char)
-    (- (char->integer char) (char->integer #\0))))
+(define (char->digit char)
+  (- (char->integer char) (char->integer #\0)))
 
-(define string->digits
-  (lambda (string)
-    (map char->digit (string->list string))))
+(define (string->digits string)
+  (map char->digit (string->list string)))
 
-;; Given a list of battery joltages in a bank, find the maximum two
-;; digit number we can construct
-(define find-max-two-digit-number
-  (lambda (list-of-digits previous-max)
-    (if (null? list-of-digits)
-        previous-max
-        (let ((first-digit (car list-of-digits))
-              (other-digits (cdr list-of-digits)))
-          (if (> first-digit previous-max)
-              (find-max-two-digit-number other-digits first-digit)
-              (find-max-two-digit-number other-digits previous-max))))))
-;; TODO: Expand the following to find a two digit number, not just the
-;; maximum singular digit
+;; Given a list of digits, find the first largest one and its position
+(define (find-max-digit-and-position list-of-digits)
+  (define (loop digits pos max argmax)
+    (format #t "Digits: ~a Max: ~a Argmax: ~a.~%" digits max argmax)
+    (if (null? digits)
+        (cons max argmax)
+        (let ((first-digit (car digits))
+              (other-digits (cdr digits)))
+          (if (> first-digit max)
+              (loop other-digits (1+ pos) first-digit pos)
+              (loop other-digits (1+ pos) max argmax)))))
+  (loop list-of-digits 0 0 0))
+
+;; TODO: Find the second largest digit given a list of digits
+
 
 ;; Fetch battery bank information from the input file and process them
 (define battery-bank-strings (file->battery-banks "example.txt"))
 (define battery-banks (map string->digits battery-bank-strings))
-;; (display (map find-max-two-digit-number battery-banks))
-;; TODO: Possibly need to rewrite the max function to just take a list
-;; of integers, but encode within it the starting position of 0.
+(define max-joltages (map find-max-digit-and-position battery-banks))
+(display max-joltages)
 (newline)
