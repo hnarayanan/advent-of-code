@@ -25,26 +25,28 @@
 
 ;; Find the largest start digit (and its position) of an n-digit
 ;; number given a list of digits
-(define (find-max-nth-digit-number-start-and-position digits n)
+(define (find-max-digit-and-pos digits n)
   (define (loop remaining pos max argmax)
     (if (= (length remaining) (1- n))
         (cons max argmax)
-        (let ((first-digit (car remaining))
-              (other-digits (cdr remaining)))
-          (if (> first-digit max)
-              (loop other-digits (1+ pos) first-digit pos)
-              (loop other-digits (1+ pos) max argmax)))))
+        (let ((first (car remaining))
+              (rest (cdr remaining)))
+          (if (> first max)
+              (loop rest (1+ pos) first pos)
+              (loop rest (1+ pos) max argmax)))))
   (loop digits 0 0 0))
 
 ;; Given a list of digits, construct the largest n-digit number that we can
 (define (find-max-n-digit-number digits n)
-  (define (loop remaining-digits found-digits m)
+  (define (loop remaining found-digits m)
     (if (zero? m)
         found-digits
-        (let* ((nth-digit-max (find-max-nth-digit-number-start-and-position remaining-digits m))
-               (nth-digit-max-number (car nth-digit-max))
-               (nth-digit-max-pos (cdr nth-digit-max)))
-          (loop (drop remaining-digits (1+ nth-digit-max-pos)) (cons nth-digit-max-number found-digits) (1- m)))))
+        (let* ((result (find-max-digit-and-pos remaining m))
+               (digit (car result))
+               (pos (cdr result)))
+          (loop (drop remaining (1+ pos))
+                (cons digit found-digits)
+                (1- m)))))
   (loop digits '() n))
 
 ;; ;; Fetch battery bank information from the input file and process them
@@ -58,4 +60,4 @@
 
 ;;   ;; (define max-second-pos (cdr max-second-digit-and-pos))
 
-;;   ;; (+ (* 10 max-first-digit) max-second-digit))
+;;   ;; (+ (* 10 max-first) max-second-digit))
