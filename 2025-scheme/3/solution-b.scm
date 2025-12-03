@@ -23,32 +23,39 @@
 (define (string->digits string)
   (map char->digit (string->list string)))
 
-;; Given a list of digits, find the largest two-digit number we can
-;; construct
-(define (find-max-two-digit-number digits)
-
-  (define (find-max-nth-digit-and-position digits n pos max argmax)
-    (if (= (length digits) (1- n))
+;; Find the largest start digit (and its position) of an n-digit
+;; number given a list of digits
+(define (find-max-nth-digit-number-start-and-position digits n)
+  (define (loop remaining pos max argmax)
+    (if (= (length remaining) (1- n))
         (cons max argmax)
-        (let ((first-digit (car digits))
-              (other-digits (cdr digits)))
+        (let ((first-digit (car remaining))
+              (other-digits (cdr remaining)))
           (if (> first-digit max)
-              (find-max-nth-digit-and-position other-digits n (1+ pos) first-digit pos)
-              (find-max-nth-digit-and-position other-digits n (1+ pos) max argmax)))))
+              (loop other-digits (1+ pos) first-digit pos)
+              (loop other-digits (1+ pos) max argmax)))))
+  (loop digits 0 0 0))
 
-  (define max-first-digit-and-pos (find-max-nth-digit-and-position digits 2 0 0 0))
-  (define max-first-digit (car max-first-digit-and-pos))
-  (define max-first-pos (cdr max-first-digit-and-pos))
-  (define max-second-digit-and-pos
-    (find-max-nth-digit-and-position (drop digits (1+ max-first-pos)) 1 0 0 0))
-  (define max-second-digit (car max-second-digit-and-pos))
-  (define max-second-pos (cdr max-second-digit-and-pos))
+;; Given a list of digits, construct the largest n-digit number that we can
+(define (find-max-n-digit-number digits n)
+  (define (loop remaining-digits found-digits m)
+    (if (zero? m)
+        found-digits
+        (let* ((nth-digit-max (find-max-nth-digit-number-start-and-position remaining-digits m))
+               (nth-digit-max-number (car nth-digit-max))
+               (nth-digit-max-pos (cdr nth-digit-max)))
+          (loop (drop remaining-digits (1+ nth-digit-max-pos)) (cons nth-digit-max-number found-digits) (1- m)))))
+  (loop digits '() n))
 
-  (+ (* 10 max-first-digit) max-second-digit))
+;; ;; Fetch battery bank information from the input file and process them
+;; (define battery-bank-strings (file->battery-banks "input.txt"))
+;; (define battery-banks (map string->digits battery-bank-strings))
+;; (define max-joltages (map find-max-n-digit-number battery-banks))
+;; (display (apply + max-joltages))
+;; (newline)
 
-;; Fetch battery bank information from the input file and process them
-(define battery-bank-strings (file->battery-banks "input.txt"))
-(define battery-banks (map string->digits battery-bank-strings))
-(define max-joltages (map find-max-two-digit-number battery-banks))
-(display (apply + max-joltages))
-(newline)
+
+
+;;   ;; (define max-second-pos (cdr max-second-digit-and-pos))
+
+;;   ;; (+ (* 10 max-first-digit) max-second-digit))
