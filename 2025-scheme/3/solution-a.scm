@@ -36,13 +36,11 @@
               (find-max-first-digit-and-position other-digits (1+ pos) first-digit pos)
               (find-max-first-digit-and-position other-digits (1+ pos) max argmax)))))
 
-  (define max-first-digit-and-pos (find-max-first-digit-and-position digits 0 0 0))
-  (define max-first-digit (car max-first-digit-and-pos))
-  (define max-first-pos (cdr max-first-digit-and-pos))
-
-  (define max-second-digit (apply max (drop digits (1+ max-first-pos))))
-
-  (+ (* 10 max-first-digit) max-second-digit))
+  (let* ((max-first-digit-and-pos (find-max-first-digit-and-position digits 0 0 0))
+         (max-first-digit (car max-first-digit-and-pos))
+         (max-first-pos (cdr max-first-digit-and-pos))
+         (max-second-digit (apply max (drop digits (1+ max-first-pos)))))
+    (+ (* 10 max-first-digit) max-second-digit)))
 
 ;; Fetch battery bank information from the input file and process them
 (define battery-bank-strings (file->battery-banks "input.txt"))
