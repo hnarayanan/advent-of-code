@@ -28,7 +28,7 @@
 (define (find-max-two-digit-number digits)
 
   (define (find-max-first-digit-and-position digits pos max argmax)
-    (if (= (length digits) 1) ;; Because we want at least one digit to the right
+    (if (null? (cdr digits)) ;; Because we want at least one digit to the right
         (cons max argmax)
         (let ((first-digit (car digits))
               (other-digits (cdr digits)))
@@ -40,16 +40,7 @@
   (define max-first-digit (car max-first-digit-and-pos))
   (define max-first-pos (cdr max-first-digit-and-pos))
 
-  (define (find-max-second-digit digits max)
-    (if (null? digits)
-        max
-        (let ((first-digit (car digits))
-              (other-digits (cdr digits)))
-          (if (> first-digit max)
-              (find-max-second-digit other-digits first-digit)
-              (find-max-second-digit other-digits max)))))
-
-  (define max-second-digit (find-max-second-digit (drop digits (1+ max-first-pos)) 0))
+  (define max-second-digit (apply max (drop digits (1+ max-first-pos))))
 
   (+ (* 10 max-first-digit) max-second-digit))
 
