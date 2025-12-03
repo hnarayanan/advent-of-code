@@ -2,7 +2,7 @@
 !#
 
 (use-modules (ice-9 rdelim)
-             (ice-9 format))
+             (srfi srfi-1))
 
 ;; Given an input file, return a string representation of battery
 ;; banks
@@ -23,25 +23,39 @@
 (define (string->digits string)
   (map char->digit (string->list string)))
 
-;; Given a list of digits, find the first largest one and its position
-(define (find-max-digit-and-position list-of-digits)
-  (define (loop digits pos max argmax)
-    (format #t "Digits: ~a Max: ~a Argmax: ~a.~%" digits max argmax)
-    (if (null? digits)
+;; Given a list of digits, find the largest two-digit number we can
+;; construct
+(define (find-max-two-digit-number digits)
+
+  (define (find-max-first-digit-and-position digits pos max argmax)
+    (if (= (length digits) 1) ;; Because we want at least one digit to the right
         (cons max argmax)
         (let ((first-digit (car digits))
               (other-digits (cdr digits)))
           (if (> first-digit max)
-              (loop other-digits (1+ pos) first-digit pos)
-              (loop other-digits (1+ pos) max argmax)))))
-  (loop list-of-digits 0 0 0))
+              (find-max-first-digit-and-position other-digits (1+ pos) first-digit pos)
+              (find-max-first-digit-and-position other-digits (1+ pos) max argmax)))))
 
-;; TODO: Find the second largest digit given a list of digits
+  (define max-first-digit-and-pos (find-max-first-digit-and-position digits 0 0 0))
+  (define max-first-digit (car max-first-digit-and-pos))
+  (define max-first-pos (cdr max-first-digit-and-pos))
 
+  (define (find-max-second-digit digits max)
+    (if (null? digits)
+        max
+        (let ((first-digit (car digits))
+              (other-digits (cdr digits)))
+          (if (> first-digit max)
+              (find-max-second-digit other-digits first-digit)
+              (find-max-second-digit other-digits max)))))
+
+  (define max-second-digit (find-max-second-digit (drop digits (1+ max-first-pos)) 0))
+
+  (+ (* 10 max-first-digit) max-second-digit))
 
 ;; Fetch battery bank information from the input file and process them
-(define battery-bank-strings (file->battery-banks "example.txt"))
+(define battery-bank-strings (file->battery-banks "input.txt"))
 (define battery-banks (map string->digits battery-bank-strings))
-(define max-joltages (map find-max-digit-and-position battery-banks))
-(display max-joltages)
+(define max-joltages (map find-max-two-digit-number battery-banks))
+(display (apply + max-joltages))
 (newline)
