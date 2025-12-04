@@ -21,16 +21,6 @@
   (cond ((char=? character #\.) #f)
         ((char=? character #\@) #t)))
 
-(define (lines->grid lines)
-  (define (loop remaining grid-with-paper-state)
-    (if (null? remaining)
-        (reverse grid-with-paper-state)
-        (loop (cdr remaining)
-              (cons
-               (string->list (car remaining))
-               grid-with-paper-state))))
-  (loop lines '()))
-
 ;; Write some helper procedures to fetch the state at a given grid
 ;; position and determine if they can be accessed by a forklift
 (define (paper-roll-in-pos? grid row col)
@@ -60,9 +50,7 @@
   (let ((neighbours (map (lambda (pos)
                            (paper-roll-in-pos? grid (car pos) (cdr pos)))
                          (neighbourhood row col))))
-    (if (< (apply boolean+ neighbours) min-neighbours-blocking)
-        #t
-        #f)))
+    (< (apply boolean+ neighbours) min-neighbours-blocking)))
 
 ;; Finally, we write a procedure that finds all the paper rolls that a
 ;; forklift can access on the entire grid
@@ -78,11 +66,10 @@
        grid
        (iota (length grid))))
 
-
 ;; Fetch the locations of the rolls of paper from the input file and
 ;; process them
 (define paper-rolls-lines (file->lines "input.txt"))
-(define paper-rolls-grid (lines->grid paper-rolls-lines))
+(define paper-rolls-grid (map string->list paper-rolls-lines))
 (define accessible-paper-rolls (all-paper-rolls-forklifts-can-access paper-rolls-grid))
 (define number-of-accesible-paper-rolls (apply boolean+ (apply append accessible-paper-rolls)))
 (display number-of-accesible-paper-rolls)
