@@ -91,10 +91,16 @@
 
 ;; Fetch the locations of the rolls of paper from the input file and
 ;; process them
-(define initial-state (load-initial-state "example.txt"))
-(define initial-accessible (mark-accessible-paper-rolls initial-state))
-(define initial-accessible-count (count-accessible-paper-rolls initial-accessible))
-(define next-state (remove-accessible-paper-rolls initial-accessible))
+(define (process-until-done initial-state)
+  (define (loop state total-count)
+    (let* ((marked (mark-accessible-paper-rolls state))
+           (count (count-accessible-paper-rolls marked)))
+      (if (zero? count)
+          total-count
+          (loop (remove-accessible-paper-rolls marked)
+                (+ total-count count)))))
+  (loop initial-state 0))
 
-(display next-state)
+(define result (process-until-done (load-initial-state "input.txt")))
+(display result)
 (newline)
