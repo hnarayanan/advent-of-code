@@ -4,7 +4,9 @@
 (use-modules (ice-9 rdelim)
              (srfi srfi-1))
 
-;; Given an input file, return a list of lines of its contents
+
+;; Given a list of lines containing paper roll positions, construct a
+;; full grid of positions and states that we can work with
 (define (file->lines path)
   (call-with-input-file path
     (lambda (port)
@@ -15,14 +17,17 @@
               (loop (cons line lines)))))
       (loop '()))))
 
-;; Given a list of lines containing paper roll positions, construct a
-;; full grid of positions and states that we can work with
+;; Write some helper procedures to fetch the state at a given grid
+;; position and determine if they can be accessed by a forklift
 (define (paper-roll? character)
   (cond ((char=? character #\.) #f)
         ((char=? character #\@) #t)))
 
-;; Write some helper procedures to fetch the state at a given grid
-;; position and determine if they can be accessed by a forklift
+(define (can-forklift-access? character)
+  (cond ((char=? character #\.) #f)
+        ((char=? character #\@) #f)
+        ((char=? character #\x) #t)))
+
 (define (paper-roll-in-pos? grid row col)
   (if (and (>= row 0)
            (>= col 0)
@@ -45,6 +50,9 @@
 (define (boolean+ . bools)
   (apply + (map (lambda (b) (if b 1 0)) bools)))
 
+(define (accessible-paper-rolls+ . cells)
+  (apply boolean+ (map can-forklift-access? cells)))
+
 (define min-neighbours-blocking 4)
 (define (can-forklift-access-in-pos? grid row col)
   (let ((neighbours (map (lambda (pos)
@@ -59,8 +67,8 @@
          (map (lambda (cell col-idx)
                 (if (and (paper-roll? cell)
                          (can-forklift-access-in-pos? grid row-idx col-idx))
-                    #t
-                    #f))
+                    #\x
+                    cell))
               row
               (iota (length row))))
        grid
@@ -68,9 +76,10 @@
 
 ;; Fetch the locations of the rolls of paper from the input file and
 ;; process them
-(define paper-rolls-lines (file->lines "input.txt"))
+(define paper-rolls-lines (file->lines "example.txt"))
 (define paper-rolls-grid (map string->list paper-rolls-lines))
 (define accessible-paper-rolls (all-paper-rolls-forklifts-can-access paper-rolls-grid))
-(define number-of-accesible-paper-rolls (apply boolean+ (apply append accessible-paper-rolls)))
+(display accessible-paper-rolls)
+(define number-of-accesible-paper-rolls (apply accessible-paper-rolls+ (apply append accessible-paper-rolls)))
 (display number-of-accesible-paper-rolls)
 (newline)
