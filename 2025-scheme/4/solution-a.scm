@@ -18,8 +18,8 @@
 ;; Given a list of lines containing paper roll positions, construct a
 ;; full grid of positions and states that we can work with
 (define (mark-position character)
-  (cond ((char=? character #\.) 'empty)
-        ((char=? character #\@) 'paper-roll)))
+  (cond ((char=? character #\.) 0)
+        ((char=? character #\@) 1)))
 
 (define (lines->grid lines)
   (define (loop remaining grid-with-paper-state)
@@ -31,9 +31,36 @@
                grid-with-paper-state))))
   (loop lines '()))
 
+;; Write some helper procedures to fetch the state at a given grid
+;; position and determine if they can be accessed by a forklift
+(define (paper-roll-in-pos? grid row col)
+  (if (and (>= row 0)
+           (>= col 0)
+           (< row (length (car grid)))
+           (< col (length grid)))
+      (list-ref (list-ref grid row) col)
+      0))
+
+(define (can-forklift-access-in-pos? grid row col)
+  (let* ((N  (cons (1- row)     col))
+         (NE (cons (1- row) (1+ col)))
+         (E  (cons     row  (1+ col)))
+         (SE (cons (1+ row) (1+ col)))
+         (S  (cons (1+ row)     col))
+         (SW (cons (1+ row) (1- col)))
+         (W  (cons     row  (1- col)))
+         (NW (cons (1- row) (1- col)))
+         (neighbourhood (list N NE E SE S SW W NW))
+         (neighbours (map (lambda (pos)
+                            (paper-roll-in-pos? grid (car pos) (cdr pos)))
+                          neighbourhood)))
+    (if (< (apply + neighbours) 4)
+        1
+        0)))
 
 ;; Fetch the locations of the rolls of paper from the input file and
 ;; process them
 (define paper-rolls-lines (file->lines "example.txt"))
 (define paper-rolls-grid (lines->grid paper-rolls-lines))
-(display paper-rolls-grid)
+(display (can-forklift-access-in-pos? paper-rolls-grid 0 7))
+(newline)
