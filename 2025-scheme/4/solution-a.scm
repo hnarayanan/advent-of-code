@@ -25,16 +25,17 @@
   (map (lambda (col) (cons row col)) (iota cols)))
 
 (define (lines->grid lines)
-  (define (loop remaining grid-with-paper-state y)
+  (define (loop remaining grid-with-paper-state row)
     (if (null? remaining)
         (reverse grid-with-paper-state)
-        (loop (cdr remaining)
-              (cons
-               (map mark-position (make-grid-row y 10) (string->list (car remaining)))
-               grid-with-paper-state)
-              (1+ y)
-              )))
-    (loop lines '() 0))
+        (let* ((row-list (string->list (car remaining)))
+               (row-length (length row-list)))
+          (loop (cdr remaining)
+                (cons
+                 (map mark-position (make-grid-row row row-length) row-list)
+                 grid-with-paper-state)
+                (1+ row)))))
+  (loop lines '() 0))
 
 
 ;; Fetch the locations of the rolls of paper from the input file and
