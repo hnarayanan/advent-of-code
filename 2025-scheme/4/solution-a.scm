@@ -36,8 +36,8 @@
 (define (paper-roll-in-pos? grid row col)
   (if (and (>= row 0)
            (>= col 0)
-           (< row (length (car grid)))
-           (< col (length grid)))
+           (< row (length grid))
+           (< col (length (car grid))))
       (list-ref (list-ref grid row) col)
       0))
 
@@ -58,9 +58,26 @@
         1
         0)))
 
+;; Finally, we write a procedure that finds all the paper rolls that a
+;; forklift can access on the entire grid
+(define (all-paper-rolls-forklifts-can-access grid)
+  (map (lambda (row row-idx)
+         (map (lambda (cell col-idx)
+                (if (and (= 1 (paper-roll-in-pos? grid row-idx col-idx))
+                         (= 1 (can-forklift-access-in-pos? grid row-idx col-idx)))
+                    1
+                    0))
+              row
+              (iota (length row))))
+       grid
+       (iota (length grid))))
+
+
 ;; Fetch the locations of the rolls of paper from the input file and
 ;; process them
-(define paper-rolls-lines (file->lines "example.txt"))
+(define paper-rolls-lines (file->lines "input.txt"))
 (define paper-rolls-grid (lines->grid paper-rolls-lines))
-(display (can-forklift-access-in-pos? paper-rolls-grid 0 7))
+(define accessible-paper-rolls (all-paper-rolls-forklifts-can-access paper-rolls-grid))
+(define number-of-accesible-paper-rolls (apply + (apply append accessible-paper-rolls)))
+(display number-of-accesible-paper-rolls)
 (newline)
