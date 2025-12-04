@@ -7,13 +7,13 @@
 
 ;; Given a list of lines containing paper roll positions, construct a
 ;; full grid of positions and states that we can work with
-(define (file->lines path)
+(define (load-initial-state path)
   (call-with-input-file path
     (lambda (port)
       (define (loop lines)
         (let ((line (read-line port)))
           (if (eof-object? line)
-              (reverse lines)
+              (map string->list (reverse lines))
               (loop (cons line lines)))))
       (loop '()))))
 
@@ -60,8 +60,9 @@
                          (neighbourhood row col))))
     (< (apply count-true neighbours) min-neighbours-blocking)))
 
-;; Finally, we write a procedure that finds all the paper rolls that a
-;; forklift can access on the entire grid
+;; Finally, we write a procedures that work on the entire grid,
+;; starting with one that marks all the paper rolls that a forklift
+;; can access
 (define (mark-accessible-paper-rolls grid)
   (map (lambda (row row-idx)
          (map (lambda (cell col-idx)
@@ -74,14 +75,26 @@
        grid
        (iota (length grid))))
 
+;; Count all the accessible paper rolls on the grid
 (define (count-accessible-paper-rolls grid)
   (apply count-accessible (apply append grid)))
 
+;; Remove the accessible paper rolls on the grid
+(define (remove-accessible-paper-rolls grid)
+  (map (lambda (row)
+         (map (lambda (cell)
+                (if (can-forklift-access? cell)
+                    #\.
+                    cell))
+              row))
+       grid))
+
 ;; Fetch the locations of the rolls of paper from the input file and
 ;; process them
-(define lines (file->lines "example.txt"))
-(define initial-state (map string->list lines))
+(define initial-state (load-initial-state "example.txt"))
 (define initial-accessible (mark-accessible-paper-rolls initial-state))
 (define initial-accessible-count (count-accessible-paper-rolls initial-accessible))
-(display initial-accessible-count)
+(define next-state (remove-accessible-paper-rolls initial-accessible))
+
+(display next-state)
 (newline)
