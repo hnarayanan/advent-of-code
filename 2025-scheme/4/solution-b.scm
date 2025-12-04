@@ -4,7 +4,6 @@
 (use-modules (ice-9 rdelim)
              (srfi srfi-1))
 
-
 ;; Given a list of lines containing paper roll positions, construct a
 ;; full grid of positions and states that we can work with
 (define (load-initial-state path)
@@ -19,14 +18,11 @@
 
 ;; Write some helper procedures to fetch the state at a given grid
 ;; position and determine if they can be accessed by a forklift
-(define (paper-roll? character)
-  (cond ((char=? character #\.) #f)
-        ((char=? character #\@) #t)))
+(define (paper-roll? c)
+  (char=? c #\@))
 
-(define (can-forklift-access? character)
-  (cond ((char=? character #\.) #f)
-        ((char=? character #\@) #f)
-        ((char=? character #\x) #t)))
+(define (can-forklift-access? c)
+  (char=? c #\x))
 
 (define (paper-roll-in-pos? grid row col)
   (if (and (>= row 0)
