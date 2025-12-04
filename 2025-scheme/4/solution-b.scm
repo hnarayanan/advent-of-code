@@ -47,22 +47,22 @@
         (NW (cons (1- row) (1- col))))
     (list N NE E SE S SW W NW)))
 
-(define (boolean+ . bools)
+(define (count-true . bools)
   (apply + (map (lambda (b) (if b 1 0)) bools)))
 
-(define (accessible-paper-rolls+ . cells)
-  (apply boolean+ (map can-forklift-access? cells)))
+(define (count-accessible . cells)
+  (apply count-true (map can-forklift-access? cells)))
 
 (define min-neighbours-blocking 4)
 (define (can-forklift-access-in-pos? grid row col)
   (let ((neighbours (map (lambda (pos)
                            (paper-roll-in-pos? grid (car pos) (cdr pos)))
                          (neighbourhood row col))))
-    (< (apply boolean+ neighbours) min-neighbours-blocking)))
+    (< (apply count-true neighbours) min-neighbours-blocking)))
 
 ;; Finally, we write a procedure that finds all the paper rolls that a
 ;; forklift can access on the entire grid
-(define (all-paper-rolls-forklifts-can-access grid)
+(define (mark-accessible-paper-rolls grid)
   (map (lambda (row row-idx)
          (map (lambda (cell col-idx)
                 (if (and (paper-roll? cell)
@@ -74,12 +74,14 @@
        grid
        (iota (length grid))))
 
+(define (count-accessible-paper-rolls grid)
+  (apply count-accessible (apply append grid)))
+
 ;; Fetch the locations of the rolls of paper from the input file and
 ;; process them
-(define paper-rolls-lines (file->lines "example.txt"))
-(define paper-rolls-grid (map string->list paper-rolls-lines))
-(define accessible-paper-rolls (all-paper-rolls-forklifts-can-access paper-rolls-grid))
-(display accessible-paper-rolls)
-(define number-of-accesible-paper-rolls (apply accessible-paper-rolls+ (apply append accessible-paper-rolls)))
-(display number-of-accesible-paper-rolls)
+(define lines (file->lines "example.txt"))
+(define initial-state (map string->list lines))
+(define initial-accessible (mark-accessible-paper-rolls initial-state))
+(define initial-accessible-count (count-accessible-paper-rolls initial-accessible))
+(display initial-accessible-count)
 (newline)
