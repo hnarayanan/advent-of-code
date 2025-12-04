@@ -17,25 +17,19 @@
 
 ;; Given a list of lines containing paper roll positions, construct a
 ;; full grid of positions and states that we can work with
-(define (mark-position pos character)
-  (cond ((char=? character #\.) (cons pos 'empty))
-        ((char=? character #\@) (cons pos 'paper-roll))))
-
-(define (make-grid-row row cols)
-  (map (lambda (col) (cons row col)) (iota cols)))
+(define (mark-position character)
+  (cond ((char=? character #\.) 'empty)
+        ((char=? character #\@) 'paper-roll)))
 
 (define (lines->grid lines)
-  (define (loop remaining grid-with-paper-state row)
+  (define (loop remaining grid-with-paper-state)
     (if (null? remaining)
         (reverse grid-with-paper-state)
-        (let* ((row-list (string->list (car remaining)))
-               (row-length (length row-list)))
-          (loop (cdr remaining)
-                (cons
-                 (map mark-position (make-grid-row row row-length) row-list)
-                 grid-with-paper-state)
-                (1+ row)))))
-  (loop lines '() 0))
+        (loop (cdr remaining)
+              (cons
+               (map mark-position (string->list (car remaining)))
+               grid-with-paper-state))))
+  (loop lines '()))
 
 
 ;; Fetch the locations of the rolls of paper from the input file and
