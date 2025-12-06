@@ -41,32 +41,34 @@
   (loop data '()))
 
 ;; Given a list of ranges, merge them in a systematic way
-(define (merge-into-ranges range ranges)
+(define (insert-range new existing)
   (cond
    ;; There are no existing ranges, just merge the first one in
-   ((null? ranges)
-    (list range))
+   ((null? existing)
+    (list new))
    ;; Current range entirely before new range - keep it, continue
-   ((< (cdr (car ranges)) (car range))
-    (cons (car ranges) (merge-into-ranges range (cdr ranges))))
+   ((< (cdr (car existing)) (car new))
+    (cons (car existing) (insert-range new (cdr existing))))
    ;; Current range entirely after new range - insert here, done
-   ((> (car (car ranges)) (cdr range))
-    (cons range ranges))
+   ((> (car (car existing)) (cdr new))
+    (cons new existing))
    ;; Overlap - merge into bigger range, continue with that
    (else
-    (merge-into-ranges
-     (cons (min (car range) (car (car ranges)))
-           (max (cdr range) (cdr (car ranges))))
-     (cdr ranges)))))
+    (let ((current (car existing))
+          (rest (cdr existing)))
+      (insert-range
+       (cons (min (car new) (car current))
+             (max (cdr new) (cdr current)))
+       rest)))))
 
-(define (merged-ranges input-ranges)
-  (fold merge-into-ranges '() input-ranges))
+(define (merge-all-ranges ranges)
+  (fold insert-range '() ranges))
 
 (define (range-size range)
   (1+ (- (cdr range) (car range))))
 
 ;; With all these helpers in place, we run the main program.
 (define input-ranges (parse-input-data (load-input-file "input.txt")))
-(define total-ids (apply + (map range-size (merged-ranges input-ranges))))
+(define total-ids (apply + (map range-size (merge-all-ranges input-ranges))))
 (display total-ids)
 (newline)
