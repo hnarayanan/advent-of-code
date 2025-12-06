@@ -36,9 +36,7 @@
           (cond
            ((eq? type 'range)
             (loop (cdr lines) (cons (parse-range line) ranges)))
-           ((eq? type 'id)
-            (loop (cdr lines) ranges))
-           ((eq? type 'spacer)
+           (else
             (loop (cdr lines) ranges))))))
   (loop data '()))
 
@@ -62,11 +60,7 @@
      (cdr ranges)))))
 
 (define (merged-ranges input-ranges)
-  (define (loop remaining ranges)
-    (if (null? remaining)
-        ranges
-        (loop (cdr remaining) (merge-into-ranges (car remaining) ranges))))
-  (loop input-ranges '()))
+  (fold merge-into-ranges '() input-ranges))
 
 (define (range-size range)
   (1+ (- (cdr range) (car range))))
