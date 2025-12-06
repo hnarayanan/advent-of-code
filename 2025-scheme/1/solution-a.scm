@@ -1,8 +1,7 @@
 #!/usr/bin/env -S guile -s
 !#
 
-(use-modules (ice-9 rdelim)
-             (ice-9 format))
+(use-modules (ice-9 rdelim))
 
 ;; Given an input file, return a list of turns
 (define (file->turns path)
@@ -40,8 +39,6 @@
 (define pointer 50)
 (define counter 0)
 
-(format #t "The dial starts by pointing at ~a~%" pointer)
-
 ;; For each turn, find the new pointer position
 ;; If it's at 0, increment the counter
 (for-each
@@ -49,9 +46,9 @@
    (let ((delta (turn->delta turn)))
      (set! pointer (looped+ pointer delta))
      (when (zero? pointer)
-       (set! counter (1+ counter)))
-     (format #t "The dial is rotated ~a to point at ~a.~%" turn pointer)))
+       (set! counter (1+ counter)))))
  turns)
 
 ;; Display the result
-(format #t "The password is ~a.~%" counter)
+(display counter)
+(newline)

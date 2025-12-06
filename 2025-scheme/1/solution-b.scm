@@ -1,8 +1,7 @@
 #!/usr/bin/env -S guile -s
 !#
 
-(use-modules (ice-9 rdelim)
-             (ice-9 format))
+(use-modules (ice-9 rdelim))
 
 ;; Given an input file, return a list of turns
 (define (file->turns path)
@@ -66,7 +65,6 @@
              (final-counter (if (zero? new-pointer)
                                 (1+ new-counter)
                                 new-counter)))
-        (format #t "The dial is rotated ~a to point at ~a.~%" turn new-pointer)
         (process-turns (cdr turns) new-pointer final-counter))))
 
 ;; Fetch turns from the file to process
@@ -74,4 +72,5 @@
 
 ;; Start the pointer at 50 and process the turns
 (define password (process-turns turns 50 0))
-(format #t "The new password would be ~a.~%" password)
+(display password)
+(newline)
