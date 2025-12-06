@@ -2,6 +2,7 @@
 !#
 
 (use-modules (ice-9 rdelim)
+             (srfi srfi-1)
              (srfi srfi-11))
 
 ;; Given a file containing fresh ingredient ID ranges and available
@@ -47,10 +48,18 @@
             (loop (cdr lines) ranges ids))))))
   (loop data '() '()))
 
+;; We now have enough information to check whether a given ingredient
+;; ID belongs to any of the fresh ingredient ID ranges.
+(define (in-range? n low high)
+  (<= low n high))
 
-(define input-data (load-input-file "example.txt"))
+(define (in-any-range? n ranges)
+  (any (lambda (range) (in-range? n (car range) (cdr range)))
+       ranges))
+
+;; With all these helpers in place, we run the main program.
+(define input-data (load-input-file "input.txt"))
 (let-values (((ranges ids) (parse-input-data input-data)))
-  (display ranges)
-  (newline)
-  (display ids))
+  (define fresh-ingredients (filter(lambda (id) (in-any-range? id ranges)) ids))
+  (display (length fresh-ingredients)))
 (newline)
