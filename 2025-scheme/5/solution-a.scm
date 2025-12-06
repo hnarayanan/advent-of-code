@@ -14,8 +14,7 @@
       (define (loop lines)
         (let ((line (read-line port)))
           (if (eof-object? line)
-              (begin
-                (reverse lines))
+              (reverse lines)
               (loop (cons line lines)))))
       (loop '()))))
 
@@ -23,7 +22,7 @@
   (cond
    ((string-index s #\-) 'range)
    ((string-null? s) 'spacer)
-   (#t 'id)))
+   (else 'id)))
 
 (define (parse-range s)
   (let ((parts (string-split s #\-)))
@@ -60,6 +59,6 @@
 ;; With all these helpers in place, we run the main program.
 (define input-data (load-input-file "input.txt"))
 (let-values (((ranges ids) (parse-input-data input-data)))
-  (define fresh-ingredients (filter(lambda (id) (in-any-range? id ranges)) ids))
-  (display (length fresh-ingredients)))
-(newline)
+  (define fresh-ingredients (filter (lambda (id) (in-any-range? id ranges)) ids))
+  (display (length fresh-ingredients))
+  (newline))
