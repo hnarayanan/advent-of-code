@@ -21,17 +21,17 @@
               (loop (cons line lines)))))
       (loop '()))))
 
-;; Use list to process rows in parallel and end up transposing the
-;; input
-(define (transpose rows)
-  (apply map list rows))
+;; Using the list procedure to process rows in parallel and ends up
+;; transposing a list of lists
+(define (transpose ll)
+  (apply map list ll))
 
 ;; Then take the string representations of operators and numbers and
 ;; make it a set of expressions that can be evaluated
 (define (right-pad s)
-  (cond ((= (string-length s) 1) (string-append s "s" "s" "s"))
-        ((= (string-length s) 2) (string-append s "s" "s"))
-        ((= (string-length s) 3) (string-append s "s"))
+  (cond ((= (string-length s) 1) (string-append s "_" "_" "_"))
+        ((= (string-length s) 2) (string-append s "_" "_"))
+        ((= (string-length s) 3) (string-append s "_"))
         (else s)))
 
 (define (string->op s)
@@ -39,11 +39,23 @@
    ((string=? s "*") *)
    ((string=? s "+") +)))
 
+(define (something l)
+  (cdr l))
+
+(define (transposed->cephalopod ll)
+  (define (loop remaining numbers)
+    (if (null? remaining)
+        numbers
+        (append (cdr remaining) numbers)))
+  (loop ll '()))
+
 (define (numbers->cephalopod-numbers l)
-  (define padded-numbers (map string-reverse (map right-pad l)))
-  (display (transpose (map string->list padded-numbers)))
-  (newline)
-  (map string-reverse (map right-pad l)))
+  (let* ((padded (map string-reverse (map right-pad l)))
+         (transposed (transpose (map string->list padded)))
+         (cephalopod (transposed->cephalopod transposed)))
+;;    (display cephalopod)
+;;    (newline)
+    transposed))
 
 (define (construct-expr expr)
   (let ((op (car expr))
@@ -59,6 +71,6 @@
 (define input-data (transpose (load-input-file "example.txt")))
 ;; (display (apply + (map eval-expr input-data)))
 
-(display (map construct-expr input-data))
+(display (reverse (map construct-expr input-data)))
 
 (newline)
