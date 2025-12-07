@@ -1,8 +1,7 @@
 #!/usr/bin/env -S guile -s
 !#
 
-(use-modules (ice-9 rdelim)
-             (srfi srfi-13))
+(use-modules (ice-9 rdelim))
 
 ;; We first load the input data in rows. It just so happens that the
 ;; operators are on the last line of the input file, which naturally
