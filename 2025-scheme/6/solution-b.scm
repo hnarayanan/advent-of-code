@@ -41,6 +41,9 @@
               (cons (substring line (car cols) (cadr cols)) result))))
   (loop column-starts '()))
 
+;; Once we have loaded the columns preserving whitespace information,
+;; can painstakingly convert them to form that is suitable for
+;; cephalopod arithmetic.
 (define (transpose ll)
   (apply map list ll))
 
@@ -54,22 +57,24 @@
          (reversed (reverse transposed)))
     (filter number? (map chars->number reversed))))
 
+;; Finally, we setup some helpers to actually do arithmetic.
 (define (string->op s)
   (cond
    ((string=? s "*") *)
    ((string=? s "+") +)))
 
-;; With all these helpers in place, we run the main program.
-(define input (load-input-file "input.txt"))
-(define column-starts (find-column-starts (car input)))
-(define operators (string-tokenize (car input)))
-(define input-numbers (map (lambda (line) (parse line column-starts))
-                           (cdr input)))
-(define columns (transpose input-numbers))
-(define number-lists (map column->numbers columns))
+(define (eval-column op nums)
+  (apply (string->op op) nums))
 
-(define result (apply + (map (lambda (op nums) (apply (string->op op) nums))
-              operators
-              number-lists)))
-(display result)
-(newline)
+;; With all these helpers in place, we run the main program.
+(let* ((input (load-input-file "input.txt"))
+       (column-starts (find-column-starts (car input)))
+       (operators (string-tokenize (car input)))
+       (input-numbers (map (lambda (line) (parse line column-starts))
+                           (cdr input)))
+       (columns (transpose input-numbers))
+       (number-lists (map column->numbers columns))
+       (result (apply + (map eval-column operators number-lists))))
+
+  (display result)
+  (newline))
