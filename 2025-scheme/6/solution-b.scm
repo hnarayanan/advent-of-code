@@ -23,46 +23,53 @@
 ;; Parsing this input file is a little tricky, so we rely on the
 ;; operator row to determine what the natural column delimiters are.
 ;; This took me nearly half a day to arrive at.
-(define (find-column-starts l)
+(define (find-column-starts line)
   (define (loop i remaining positions)
     (if (null? remaining)
         (reverse positions)
         (if (char=? (car remaining) #\space)
             (loop (1+ i) (cdr remaining) positions)
             (loop (1+ i) (cdr remaining) (cons i positions)))))
-  (loop 0 (string->list l) '()))
+  (loop 0 (string->list line) '()))
 
-(define (parse ll column-starts)
-  (display ll)
-  (newline)
-  (display column-starts)
-  (newline))
+(define (parse line column-starts)
+  (define width (string-length line))
+  (define (loop cols result)
+    (if (null? (cdr cols))
+        (reverse (cons (substring line (car cols) width) result))
+        (loop (cdr cols)
+              (cons (substring line (car cols) (cadr cols)) result))))
+  (loop column-starts '()))
 
-;; ;; Using the list procedure to process rows in parallel and ends up
-;; ;; transposing a list of lists
-;; (define (transpose ll)
-;;   (apply map list ll))
+(define (transpose ll)
+  (apply map list ll))
+
+(define (chars->number chars)
+  (let ((digits (filter char-numeric? chars)))
+    (string->number (list->string digits))))
+
+(define (column->numbers col)
+  (let* ((char-lists (map string->list col))
+         (transposed (transpose char-lists))
+         (reversed (reverse transposed)))
+    (filter number? (map chars->number reversed))))
 
 (define (string->op s)
   (cond
    ((string=? s "*") *)
    ((string=? s "+") +)))
 
-;; ;; (define (eval-expr expr)
-;; ;;   (let ((op (string->op (car expr)))
-;; ;;         (args (map string->number (cdr expr))))
-;; ;;     (apply op args)))
-
-;; ;; With all these helpers in place, we run the main program.
-(define input (load-input-file "example.txt"))
+;; With all these helpers in place, we run the main program.
+(define input (load-input-file "input.txt"))
 (define column-starts (find-column-starts (car input)))
-(define input-numbers (parse (cdr input) column-starts))
 (define operators (string-tokenize (car input)))
+(define input-numbers (map (lambda (line) (parse line column-starts))
+                           (cdr input)))
+(define columns (transpose input-numbers))
+(define number-lists (map column->numbers columns))
 
-;; ;; (define input-data (transpose (load-input-file "example.txt")))
-;; ;; (display (apply + (map eval-expr input-data)))
-
-;; ;; (display (reverse (map construct-expr input-data)))
-(display operators)
-
+(define result (apply + (map (lambda (op nums) (apply (string->op op) nums))
+              operators
+              number-lists)))
+(display result)
 (newline)
