@@ -26,33 +26,51 @@
 (define (splitter? c)
   (char=? c #\^))
 
-(define (identify-beam-positions l)
-  (define (loop remaining i positions)
-    (if (null? remaining)
-        (reverse positions)
-        (if (beamy? (car remaining))
-            (loop (cdr remaining) (1+ i) (cons i positions))
-            (loop (cdr remaining) (1+ i) positions) )))
-  (loop l 0 '()))
-
 
 ;; For each row, we look at the previous row
-;; Wherever these is an S or |, we want to copy that over to our row
+;; Wherever these is an S or |, we want to copy | over to our row
 ;; If it's a . in our row, we just copy over | in that position
 ;; If it's a ^ in our row, we copy over | to before and after that position
+(define (update-position prev curr)
+  (if (beamy? prev)
+      (if (empty? curr)
+          #\|
+          #\?)
+      curr))
 
-(define (count-splits manifold)
-  (define (loop remaining updated count)
-    (if (= (length remaining) 1)
-        count
-        (loop (cdr remaining) updated (1+ count))))
-  (loop manifold '() 0))
+(define (propagate-one-step prev current)
+  (define (loop remaining-prev remaining-current next)
+    (if (or (null? remaining-prev)
+            (null? remaining-current))
+        (reverse next)
+        (loop (cdr remaining-prev)
+              (cdr remaining-current)
+              (cons (update-position (car remaining-prev) (car remaining-current)) next))))
+  (loop prev current '()))
 
+(define (propagate-grid manifold)
+  (let loop ((prev-row (car manifold))
+             (rows     (cdr manifold))
+             (acc      (list (car manifold))))
+    (if (null? rows)
+        (reverse acc)
+        (let* ((current-row (car rows))
+               (updated-row (propagate-one-step prev-row current-row)))
+          (display updated-row)
+          (newline)
+          (loop current-row
+                (cdr rows)
+                (cons updated-row acc))))))
+
+;; (define (count-splits manifold)
+;;   (define (loop remaining updated count)
+;;     (if (= (length remaining) 1)
+;;         count
+;;         (loop (cdr remaining) updated (1+ count))))
+;;   (loop manifold '() 0))
 
 ;; With all these helpers in place, we run the main program.
 (let* ((manifold (load-input-file "example.txt")))
-;;  (display manifold)
-;;  (newline)
-  (display (identify-beam-positions (list-ref manifold 14)))
+  (propagate-grid manifold)
 ;;  (display (count-splits manifold))
   (newline))
