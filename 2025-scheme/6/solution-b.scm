@@ -41,7 +41,7 @@
   (loop column-starts '()))
 
 ;; Once we have loaded the columns preserving whitespace information,
-;; can painstakingly convert them to form that is suitable for
+;; we can painstakingly convert them to form that is suitable for
 ;; cephalopod arithmetic.
 (define (transpose ll)
   (apply map list ll))
