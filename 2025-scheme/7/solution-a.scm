@@ -42,19 +42,30 @@
 ;; lists are good for walking left to right, they are not good for
 ;; arbitrary lookups and changes. This then means we convert them to
 ;; vectors, update them as needed, and then send them back as lists.
+(define (propagate-one-step prev-row curr-row)
+  (let* ((len (length curr-row))
+         (prev (list->vector prev-row))
+         (curr (list->vector curr-row))
+         (new (vector-copy curr)))
 
-copy | over to our row If it's a .
-;; in our row, we just copy over | in that position If it's a ^ in our
-;; row, we copy over | to before and after that position
-(define (propagate-one-step prev current)
-  (define (loop remaining-prev remaining-current next)
-    (if (or (null? remaining-prev)
-            (null? remaining-current))
-        (reverse next)
-        (loop (cdr remaining-prev)
-              (cdr remaining-current)
-              (cons (update-position (car remaining-prev) (car remaining-current)) next))))
-  (loop prev current '()))
+    (define (loop i)
+      (if (= i len)
+          (vector->list new)
+          (let* ((p (vector-ref prev i))
+                 (c (vector-ref curr i)))
+            (when (beamy? p)
+              (cond
+               ((empty? c)
+                (vector-set! new i #\|))
+               ((splitter? c)
+                (when (> i 0)
+                  (vector-set! new (1- i) #\|))
+                (when (< (1+ i) len)
+                  (vector-set! new (1+ i) #\|)))
+               (else
+                #f)))
+            (loop (1+ i)))))
+    (loop 0)))
 
 (define (propagate-grid manifold)
   (let loop ((prev-row (car manifold))
@@ -63,22 +74,12 @@ copy | over to our row If it's a .
     (if (null? rows)
         (reverse grid)
         (let* ((current-row (car rows))
-               (updated-row (propagate-one-step prev-row current-row)))
-          (display updated-row)
-          (newline)
-          (loop current-row
+               (new-row (propagate-one-step prev-row current-row)))
+          (loop new-row
                 (cdr rows)
-                (cons updated-row grid))))))
-
-;; (define (count-splits manifold)
-;;   (define (loop remaining updated count)
-;;     (if (= (length remaining) 1)
-;;         count
-;;         (loop (cdr remaining) updated (1+ count))))
-;;   (loop manifold '() 0))
+                (cons new-row grid))))))
 
 ;; With all these helpers in place, we run the main program.
 (let* ((manifold (load-input-file "example.txt")))
-  (propagate-grid manifold)
-;;  (display (count-splits manifold))
+  (display (propagate-grid manifold))
   (newline))
