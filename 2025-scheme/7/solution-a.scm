@@ -69,6 +69,7 @@
             (loop (1+ i)))))
     (loop 0)))
 
+;; We can now repeat these steps and propagate through the whole grid.
 (define (propagate-grid manifold)
   (define (loop prev-row rows grid count)
     (if (null? rows)
@@ -87,6 +88,6 @@
         0))
 
 ;; With all these helpers in place, we run the main program.
-(let* ((manifold (load-input-file "example.txt")))
+(let* ((manifold (load-input-file "input.txt")))
   (display (propagate-grid manifold))
   (newline))
