@@ -1,7 +1,8 @@
 #!/usr/bin/env -S guile -s
 !#
 
-(use-modules (ice-9 rdelim)
+(use-modules (ice-9 hash-table)
+             (ice-9 rdelim)
              (srfi srfi-1))
 
 ;; We first load the input data in rows. Unlike our last attempt,
@@ -82,20 +83,40 @@
             (+ (pos-col pos) 1)))
 
 ;; We do this in a recursive way that can count up the valid timelines
-;; introduced by the different possibilities.
-(define (count-timelines grid pos)
-  (cond
-    ((dead? grid pos)
-     1)
-    ((at-splitter? grid pos)
-     (+ (count-timelines grid (go-left pos))
-        (count-timelines grid (go-right pos))))
-    (else
-     (count-timelines grid (step-forward pos)))))
+;; introduced by the different possibilities. It turns out (and I know
+;; this the hard way) doing this in a naively recursive fashion is
+;; exceedingly expensive and will not work for the input data. So we
+;; "memoise" it by following the example of SICP Exercise 3.27 in
+;; https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/full-text/book/book-Z-H-22.html#%_sec_3.3.3
+(define (memoize f)
+  (let ((table (make-hash-table)))
+    (lambda (x)
+      (let ((hit (hash-ref table x #f)))
+        (if hit
+            hit
+            (let ((result (f x)))
+              (hash-set! table x result)
+              result))))))
+
+(define (make-count-timelines grid)
+  (letrec ((count
+            (memoize
+             (lambda (pos)
+               (cond
+                 ((dead? grid pos)
+                  1)
+                 ((at-splitter? grid pos)
+                  (+ (count (go-left pos))
+                     (count (go-right pos))))
+                 (else
+                  (count (step-forward pos))))))))
+    count))
+
 
 ;; With all these helpers in place, we run the main program.
-(let* ((grid (load-input-file "example.txt"))
+(let* ((grid (load-input-file "input.txt"))
        (start-pos (find-start grid))
-       (timelines (count-timelines grid start-pos)))
+       (count-from (make-count-timelines grid))
+       (timelines (count-from start-pos)))
   (display timelines)
   (newline))
