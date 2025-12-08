@@ -98,20 +98,22 @@
               (hash-set! table x result)
               result))))))
 
+(define (raw-count grid count pos)
+  (cond
+    ((dead? grid pos)
+     1)
+    ((at-splitter? grid pos)
+     (+ (count (go-left pos))
+        (count (go-right pos))))
+    (else
+     (count (step-forward pos)))))
+
 (define (make-count-timelines grid)
   (letrec ((count
             (memoize
              (lambda (pos)
-               (cond
-                 ((dead? grid pos)
-                  1)
-                 ((at-splitter? grid pos)
-                  (+ (count (go-left pos))
-                     (count (go-right pos))))
-                 (else
-                  (count (step-forward pos))))))))
+               (raw-count grid count pos)))))
     count))
-
 
 ;; With all these helpers in place, we run the main program.
 (let* ((grid (load-input-file "input.txt"))
