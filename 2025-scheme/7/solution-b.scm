@@ -70,7 +70,7 @@
        (splitter? (cell-at grid pos))))
 
 (define (step-forward pos)
-  (make-pos (+ 1 (pos-row pos))
+  (make-pos (1+ (pos-row pos))
             (pos-col pos)))
 
 (define (go-left pos)
