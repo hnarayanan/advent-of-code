@@ -57,8 +57,7 @@
   (char=? c #\^))
 
 ;; With some understanding of the grid, we can "propagate" our beam
-;; through the grid. We do this in a recursive way that builds up a
-;; tree of all possibilities.
+;; through the grid.
 (define (find-start grid)
   (let ((start-col (list-index start? (car grid))))
     (make-pos 0 start-col)))
@@ -82,33 +81,21 @@
   (make-pos (pos-row pos)
             (+ (pos-col pos) 1)))
 
-(define (timeline-tree grid pos path)
-  (define new-path (cons pos path))
-  (cond ((dead? grid pos) (reverse new-path))
-        ((at-splitter? grid pos)
-         (cons (timeline-tree grid (go-left pos)  new-path)
-               (timeline-tree grid (go-right pos) new-path)))
-        (else
-         (timeline-tree grid (step-forward pos) new-path))))
-
-;; Once done, we can count up the valid timelines introduced by the
-;; different possibilities.
-(define (leaf? tree)
-  (not (pair? tree)))
-
-(define (count-leaves tree)
-  (if (leaf? tree)
-      1
-      (+ (count-leaves (car tree))
-         (count-leaves (cdr tree)))))
-
-(define (count-tachyon-timelines grid)
-  (let* ((start-pos (find-start grid))
-         (tree      (timeline-tree grid start-pos '())))
-    (count-leaves tree)))
+;; We do this in a recursive way that can count up the valid timelines
+;; introduced by the different possibilities.
+(define (count-timelines grid pos)
+  (cond
+    ((dead? grid pos)
+     1)
+    ((at-splitter? grid pos)
+     (+ (count-timelines grid (go-left pos))
+        (count-timelines grid (go-right pos))))
+    (else
+     (count-timelines grid (step-forward pos)))))
 
 ;; With all these helpers in place, we run the main program.
 (let* ((grid (load-input-file "example.txt"))
-       (timelines (count-tachyon-timelines grid)))
+       (start-pos (find-start grid))
+       (timelines (count-timelines grid start-pos)))
   (display timelines)
   (newline))
