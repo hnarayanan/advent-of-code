@@ -48,26 +48,42 @@
 
 ;; Now that we have a well-defined set of pairs of points to consider,
 ;; we define some helper procedures to put them into circuits.
-(define (in-which-circuits-idx circuits p)
+(define (in-which-circuit-idx circuits p)
   (list-index (lambda (circuit) (member p circuit)) circuits))
 
 (define (neither-in-any-circuits? circuits pair)
   (let ((p1 (car pair))
         (p2 (cadr pair)))
-    (and (null? (in-which-circuits-idx circuits p1))
-         (null? (in-which-circuits-idx circuits p2)))))
+    (and (not (in-which-circuit-idx circuits p1))
+         (not (in-which-circuit-idx circuits p2)))))
 
 (define (both-in-same-circuit? circuits pair)
-  (let ((p1 (car pair))
-        (p2 (cadr pair)))
-    (equal? (in-which-circuits-idx circuits p1)
-            (in-which-circuits-idx circuits p2))))
+  (let* ((p1 (car pair))
+         (p2 (cadr pair))
+         (idx1 (in-which-circuit-idx circuits p1))
+         (idx2 (in-which-circuit-idx circuits p2)))
+    (and idx1 idx2 (equal? idx1 idx2))))
 
 (define (only-one-in-an-existing-circuit? circuits pair)
-  (let ((p1 (car pair))
-        (p2 (cadr pair)))
-    #t;; TODO: Actually implement
-))
+  (let* ((p1 (car pair))
+         (p2 (cadr pair))
+         (idx1 (in-which-circuit-idx circuits p1))
+         (idx2 (in-which-circuit-idx circuits p2)))
+    (or (and idx1 (not idx2))
+        (and idx2 (not idx1)))))
+
+(define (extend-circuit-with-point circuits pair)
+  (let* ((p1 (car pair))
+         (p2 (cadr pair))
+         (idx1 (in-which-circuit-idx circuits p1))
+         (idx2 (in-which-circuit-idx circuits p2))
+         (idx (or idx1 idx2))
+         (new-point (if idx1 p2 p1))
+         (old-circuit (list-ref circuits idx))
+         (new-circuit (cons new-point old-circuit)))
+    (append (take circuits idx)
+            (list new-circuit)
+            (drop circuits (1+ idx)))))
 
 ;;TODO:  both-in-different-circuits
 
@@ -86,6 +102,10 @@
            (display "Both in same circuits")
            (newline)
            circuits)
+          ((only-one-in-an-existing-circuit? circuits pair)
+           (display "Only one in an existing circuit")
+           (newline)
+           (extend-circuit-with-point circuits pair))
           (else
            (display "Un-handled case")
            (newline)
@@ -110,5 +130,5 @@
        (pairs (map get-pair (take sorted-pair-distances connections)))
        (circuits (create-circuits pairs)))
 
-  (display pairs)
+  (display circuits)
   (newline))
