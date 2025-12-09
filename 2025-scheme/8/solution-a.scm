@@ -48,29 +48,47 @@
 
 ;; Now that we have a well-defined set of pairs of points to consider,
 ;; we define some helper procedures to put them into circuits.
-(define (in-which-circuits? circuits p)
-  '()) ;; TODO: Actually implement
+(define (in-which-circuits-idx circuits p)
+  (list-index (lambda (circuit) (member p circuit)) circuits))
 
-(define (neither-in-circuits? circuits pair)
+(define (neither-in-any-circuits? circuits pair)
   (let ((p1 (car pair))
         (p2 (cadr pair)))
-    (and (null? (in-which-circuits? circuits p1))
-         (null? (in-which-circuits? circuits p2)))))
+    (and (null? (in-which-circuits-idx circuits p1))
+         (null? (in-which-circuits-idx circuits p2)))))
 
 (define (both-in-same-circuit? circuits pair)
   (let ((p1 (car pair))
         (p2 (cadr pair)))
-    (equal? (in-which-circuits? circuits p1)
-            (in-which-circuits? circuits p2))))
+    (equal? (in-which-circuits-idx circuits p1)
+            (in-which-circuits-idx circuits p2))))
+
+(define (only-one-in-an-existing-circuit? circuits pair)
+  (let ((p1 (car pair))
+        (p2 (cadr pair)))
+    #t;; TODO: Actually implement
+))
+
+;;TODO:  both-in-different-circuits
 
 (define (add-pair-to-circuits circuits pair)
   (let ((p1 (car pair))
         (p2 (cadr pair)))
     (cond ((null? circuits)
+           (display "Empty circuits list")
+           (newline)
            (list pair))
-          ((neither-in-circuits? circuits pair)
+          ((neither-in-any-circuits? circuits pair)
+           (display "Neither in any circuits")
+           (newline)
            (append (list pair) circuits))
           ((both-in-same-circuit? circuits pair)
+           (display "Both in same circuits")
+           (newline)
+           circuits)
+          (else
+           (display "Un-handled case")
+           (newline)
            circuits))))
 
 (define (create-circuits pairs)
