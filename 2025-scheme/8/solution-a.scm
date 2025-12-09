@@ -47,7 +47,8 @@
               (unordered-pairs (cdr l)))))
 
 ;; Now that we have a well-defined set of pairs of points to consider,
-;; we define some helper procedures to put them into circuits.
+;; we define some helper procedures to answer questions about where
+;; they fit (or not) relative to existing circuits.
 (define (in-which-circuit-idx circuits p)
   (list-index (lambda (circuit) (member p circuit)) circuits))
 
@@ -72,6 +73,16 @@
     (or (and idx1 (not idx2))
         (and idx2 (not idx1)))))
 
+(define (both-in-different-circuits? circuits pair)
+  (let* ((p1 (car pair))
+         (p2 (cadr pair))
+         (idx1 (in-which-circuit-idx circuits p1))
+         (idx2 (in-which-circuit-idx circuits p2)))
+    (and idx1 idx2 (not (equal? idx1 idx2)))))
+
+;; And now that we understand where points fit relative to existing
+;; circuits, we can systematically add pairs of points to existing
+;; circuits.
 (define (extend-circuit-with-point circuits pair)
   (let* ((p1 (car pair))
          (p2 (cadr pair))
@@ -85,31 +96,33 @@
             (list new-circuit)
             (drop circuits (1+ idx)))))
 
-;;TODO:  both-in-different-circuits
+(define (merge-two-circuits circuits pair)
+  (let* ((p1 (car pair))
+         (p2 (cadr pair))
+         (idx1 (in-which-circuit-idx circuits p1))
+         (idx2 (in-which-circuit-idx circuits p2))
+         (circuit1 (list-ref circuits idx1))
+         (circuit2 (list-ref circuits idx2))
+         (merged (append circuit1 circuit2)))
+    (cons merged
+          (filter (lambda (c)
+                    (and (not (equal? c circuit1))
+                         (not (equal? c circuit2))))
+                  circuits))))
 
 (define (add-pair-to-circuits circuits pair)
   (let ((p1 (car pair))
         (p2 (cadr pair)))
     (cond ((null? circuits)
-           (display "Empty circuits list")
-           (newline)
            (list pair))
           ((neither-in-any-circuits? circuits pair)
-           (display "Neither in any circuits")
-           (newline)
            (append (list pair) circuits))
           ((both-in-same-circuit? circuits pair)
-           (display "Both in same circuits")
-           (newline)
            circuits)
           ((only-one-in-an-existing-circuit? circuits pair)
-           (display "Only one in an existing circuit")
-           (newline)
            (extend-circuit-with-point circuits pair))
-          (else
-           (display "Un-handled case")
-           (newline)
-           circuits))))
+          ((both-in-different-circuits? circuits pair)
+           (merge-two-circuits circuits pair)))))
 
 (define (create-circuits pairs)
   (define (loop remaining circuits)
@@ -119,16 +132,17 @@
   (loop pairs '()))
 
 ;; With all these helpers in place, we run the main program.
-(let* ((points (load-input-file "example.txt"))
+(let* ((points (load-input-file "input.txt"))
        (pair-distance (make-pair-distance points))
        (pair-refs (unordered-pairs (iota (length points))))
        (pair-distances (map (lambda (pair-ref)
                               (pair-distance (car pair-ref) (cdr pair-ref)))
                             pair-refs))
        (sorted-pair-distances (sort pair-distances (lambda (x y) (< (car x) (car y)))))
-       (connections 10)
+       (connections 1000)
        (pairs (map get-pair (take sorted-pair-distances connections)))
-       (circuits (create-circuits pairs)))
-
-  (display circuits)
+       (circuits (create-circuits pairs))
+       (circuit-lengths (sort (map length circuits) >))
+       (result (apply * (take circuit-lengths 3))))
+  (display circuit-lengths)
   (newline))
