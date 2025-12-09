@@ -48,22 +48,37 @@
 
 ;; Now that we have a well-defined set of pairs of points to consider,
 ;; we define some helper procedures to put them into circuits.
-(define (in-which-circuits? circuits pair)
+(define (in-which-circuits? circuits p)
+  '()) ;; TODO: Actually implement
+
+(define (neither-in-circuits? circuits pair)
   (let ((p1 (car pair))
         (p2 (cadr pair)))
-    '())) ;; todo
+    (and (null? (in-which-circuits? circuits p1))
+         (null? (in-which-circuits? circuits p2)))))
+
+(define (both-in-same-circuit? circuits pair)
+  (let ((p1 (car pair))
+        (p2 (cadr pair)))
+    (equal? (in-which-circuits? circuits p1)
+            (in-which-circuits? circuits p2))))
 
 (define (add-pair-to-circuits circuits pair)
   (let ((p1 (car pair))
         (p2 (cadr pair)))
     (cond ((null? circuits)
            (list pair))
-          ((and (null? (in-which-circuits? circuits p1))
-                (null? (in-which-circuits? circuits p2)))
+          ((neither-in-circuits? circuits pair)
            (append (list pair) circuits))
-          ((equal? (in-which-circuits? circuits p1)
-                   (in-which-circuits? circuits p2))
+          ((both-in-same-circuit? circuits pair)
            circuits))))
+
+(define (create-circuits pairs)
+  (define (loop remaining circuits)
+    (if (null? remaining)
+        (reverse circuits)
+        (loop (cdr remaining) (add-pair-to-circuits circuits (car remaining)))))
+  (loop pairs '()))
 
 ;; With all these helpers in place, we run the main program.
 (let* ((points (load-input-file "example.txt"))
@@ -74,7 +89,8 @@
                             pair-refs))
        (sorted-pair-distances (sort pair-distances (lambda (x y) (< (car x) (car y)))))
        (connections 10)
-       (pairs (map get-pair (take sorted-pair-distances connections))))
+       (pairs (map get-pair (take sorted-pair-distances connections)))
+       (circuits (create-circuits pairs)))
 
   (display pairs)
   (newline))
