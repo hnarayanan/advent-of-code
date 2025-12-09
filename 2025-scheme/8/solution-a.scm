@@ -144,5 +144,5 @@
        (circuits (create-circuits pairs))
        (circuit-lengths (sort (map length circuits) >))
        (result (apply * (take circuit-lengths 3))))
-  (display circuit-lengths)
+  (display result)
   (newline))
