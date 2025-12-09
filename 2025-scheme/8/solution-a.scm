@@ -1,7 +1,8 @@
 #!/usr/bin/env -S guile -s
 !#
 
-(use-modules (ice-9 rdelim))
+(use-modules (ice-9 rdelim)
+             (srfi srfi-1))
 
 ;; Load input file.
 (define (load-input-file path)
@@ -14,7 +15,8 @@
                (loop (cons (map string->number (string-split line #\,)) lines)))))
       (loop '()))))
 
-;; Define some helper procedures.
+;; First we define some helper procedures around generating sets of
+;; pairs of points and the distances between them.
 (define (square x)
   (* x x))
 
@@ -34,20 +36,45 @@
            (d (distance (point i) (point j))))
       (list d i j))))
 
-(define (pairs l)
+(define (get-pair pair-distance)
+  (list (cadr pair-distance) (caddr pair-distance)))
+
+(define (unordered-pairs l)
   (if (null? l)
       '()
       (append (map (lambda (x) (cons (car l) x))
                    (cdr l))
-              (pairs (cdr l)))))
+              (unordered-pairs (cdr l)))))
+
+;; Now that we have a well-defined set of pairs of points to consider,
+;; we define some helper procedures to put them into circuits.
+(define (in-which-circuits? circuits pair)
+  (let ((p1 (car pair))
+        (p2 (cadr pair)))
+    '())) ;; todo
+
+(define (add-pair-to-circuits circuits pair)
+  (let ((p1 (car pair))
+        (p2 (cadr pair)))
+    (cond ((null? circuits)
+           (list pair))
+          ((and (null? (in-which-circuits? circuits p1))
+                (null? (in-which-circuits? circuits p2)))
+           (append (list pair) circuits))
+          ((equal? (in-which-circuits? circuits p1)
+                   (in-which-circuits? circuits p2))
+           circuits))))
 
 ;; With all these helpers in place, we run the main program.
 (let* ((points (load-input-file "example.txt"))
        (pair-distance (make-pair-distance points))
-       (pair-refs (pairs (iota (length points))))
-       (all-pair-distances (map (lambda (pair-ref) (pair-distance (car pair-ref) (cdr pair-ref))) pair-refs)))
+       (pair-refs (unordered-pairs (iota (length points))))
+       (pair-distances (map (lambda (pair-ref)
+                              (pair-distance (car pair-ref) (cdr pair-ref)))
+                            pair-refs))
+       (sorted-pair-distances (sort pair-distances (lambda (x y) (< (car x) (car y)))))
+       (connections 10)
+       (pairs (map get-pair (take sorted-pair-distances connections))))
 
-  (display (all-pair-distances))
-  (newline)
-  (display (length pair-refs))
+  (display pairs)
   (newline))
