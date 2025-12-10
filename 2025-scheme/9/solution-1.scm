@@ -28,8 +28,8 @@
 (define (make-pair-area tiles)
   (lambda (i j)
     (let* ((tile (make-tile tiles))
-           (d (area (tile i) (tile j))))
-      (list d i j))))
+           (a (area (tile i) (tile j))))
+      (list a i j))))
 
 (define (get-pair pair-area)
   (list (cadr pair-area) (caddr pair-area)))
