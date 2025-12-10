@@ -1,11 +1,11 @@
-.PHONY: solve-a solve-b all
+.PHONY: solve-1 solve-2 all
 
 SCHEME = guile -s
 
-all: solve-a solve-b
+all: solve-1 solve-2
 
-solve-a:
-	$(SCHEME) solution-a.scm
+solve-1:
+	$(SCHEME) solution-1.scm
 
-solve-b:
-	$(SCHEME) solution-b.scm
+solve-2:
+	$(SCHEME) solution-2.scm

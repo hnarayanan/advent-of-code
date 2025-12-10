@@ -1,9 +1,9 @@
-.PHONY: solve-a solve-b all
+.PHONY: solve-1 solve-2 all
 
-all: solve-a solve-b
+all: solve-1 solve-2
 
-solve-a:
-	emacs --batch -l solution-a.el
+solve-1:
+	emacs --batch -l solution-1.el
 
-solve-b:
-	emacs --batch -l solution-b.el
+solve-2:
+	emacs --batch -l solution-2.el
