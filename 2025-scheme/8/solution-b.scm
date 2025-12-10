@@ -2,7 +2,8 @@
 !#
 
 (use-modules (ice-9 rdelim)
-             (srfi srfi-1))
+             (srfi srfi-1)
+             (srfi srfi-11))
 
 ;; Load input file.
 (define (load-input-file path)
@@ -52,33 +53,19 @@
 (define (in-which-circuit-idx circuits p)
   (list-index (lambda (circuit) (member p circuit)) circuits))
 
-(define (neither-in-any-circuits? circuits pair)
+(define (pair-circuit-idxs circuits pair)
   (let ((p1 (car pair))
         (p2 (cadr pair)))
-    (and (not (in-which-circuit-idx circuits p1))
-         (not (in-which-circuit-idx circuits p2)))))
+    (values (in-which-circuit-idx circuits p1)
+            (in-which-circuit-idx circuits p2))))
 
-(define (both-in-same-circuit? circuits pair)
-  (let* ((p1 (car pair))
-         (p2 (cadr pair))
-         (idx1 (in-which-circuit-idx circuits p1))
-         (idx2 (in-which-circuit-idx circuits p2)))
-    (and idx1 idx2 (equal? idx1 idx2))))
-
-(define (only-one-in-an-existing-circuit? circuits pair)
-  (let* ((p1 (car pair))
-         (p2 (cadr pair))
-         (idx1 (in-which-circuit-idx circuits p1))
-         (idx2 (in-which-circuit-idx circuits p2)))
-    (or (and idx1 (not idx2))
-        (and idx2 (not idx1)))))
-
-(define (both-in-different-circuits? circuits pair)
-  (let* ((p1 (car pair))
-         (p2 (cadr pair))
-         (idx1 (in-which-circuit-idx circuits p1))
-         (idx2 (in-which-circuit-idx circuits p2)))
-    (and idx1 idx2 (not (equal? idx1 idx2)))))
+(define (classify-pair circuits pair)
+  (let-values (((idx1 idx2) (pair-circuit-idxs circuits pair)))
+    (cond
+     ((and (not idx1) (not idx2)) 'neither-in-any-circuit)
+     ((and idx1 idx2 (equal? idx1 idx2)) 'both-in-the-same-circuit)
+     ((and idx1 idx2) 'one-each-in-different-circuits)
+     (else 'only-one-in-a-circuit))))
 
 ;; And now that we understand where points fit relative to existing
 ;; circuits, we can systematically add pairs of points to existing
@@ -111,16 +98,13 @@
                   circuits))))
 
 (define (add-pair-to-circuits circuits pair)
-  (cond ((null? circuits)
-         (list pair))
-        ((neither-in-any-circuits? circuits pair)
-         (append (list pair) circuits))
-        ((both-in-same-circuit? circuits pair)
-         circuits)
-        ((only-one-in-an-existing-circuit? circuits pair)
-         (extend-circuit-with-point circuits pair))
-        ((both-in-different-circuits? circuits pair)
-         (merge-two-circuits circuits pair))))
+  (if (null? circuits)
+      (list pair)
+      (case (classify-pair circuits pair)
+        ((neither-in-any-circuit) (cons pair circuits))
+        ((both-in-the-same-circuit) circuits)
+        ((only-one-in-a-circuit) (extend-circuit-with-point circuits pair))
+        ((one-each-in-different-circuits) (merge-two-circuits circuits pair)))))
 
 (define (create-circuits pairs)
   (define (loop remaining circuits)
