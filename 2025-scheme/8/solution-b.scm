@@ -141,7 +141,7 @@
   (loop pairs '() 1))
 
 ;; With all these helpers in place, we run the main program.
-(let* ((points (load-input-file "example.txt"))
+(let* ((points (load-input-file "input.txt"))
        (point (make-point points))
        (pair-distance (make-pair-distance points))
        (pair-refs (unordered-pairs (iota (length points))))
@@ -150,10 +150,10 @@
                             pair-refs))
        (sorted-pair-distances (sort pair-distances (lambda (x y) (< (car x) (car y)))))
        (pairs (map get-pair sorted-pair-distances))
-       (last-pair (car (cdr (find-completing-connection pairs 20))))
+       (last-pair (car (cdr (find-completing-connection pairs (length points)))))
        (last-p1 (point (car last-pair)))
        (last-p2 (point (cadr last-pair)))
        (result (* (car last-p1) (car last-p2))))
-  
+
   (display result)
   (newline))
