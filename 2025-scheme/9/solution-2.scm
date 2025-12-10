@@ -1,7 +1,8 @@
 #!/usr/bin/env -S guile -s
 !#
 
-(use-modules (ice-9 rdelim))
+(use-modules (ice-9 rdelim)
+             (srfi srfi-1))
 
 ;; Load input file.
 (define (load-input-file path)
@@ -42,9 +43,19 @@
               (unordered-pairs (cdr lst)))))
 
 ;; Then we write some helpers to construct some representation of the
-;; boundary given tile positions.
-;; Tiles are ordered in a specific way
-;; We load them in twos
+;; boundary given tile positions. Because tiles are ordered in a very
+;; specific way, we load them in pairs (remembering to wrap around the
+;; last value back to the first).
+
+;; For each pair, depending on which coordinate is fixed, we use this
+;; to identify if it's a horizontal or vertical boundary, and then
+;; insert this section of the boundary to a data structure that holds
+;; these alongside the fixed coordinate. This is a key idea here, and
+;; the actual algorithm for this we copy over from a previous puzzle.
+
+;; I know, this is a lot, and you can find visualisation of the notes
+;; for this in the following post:
+;; https://hachyderm.io/@harish/115697048993880425
 (define (consecutive-pairs lst)
   (define first (car lst))
   (define (loop remaining)
@@ -53,23 +64,57 @@
         (cons (list (car remaining) (cadr remaining))
               (loop (cdr remaining)))))
   (loop lst))
-;; For each pair, depending on which coordinate is the same
-;; We use the same coordinate as the key on the correct data structure
+
 (define (classify-segment pair)
   (let* ((p1 (car pair))
          (p2 (cadr pair))
          (x1 (car p1)) (y1 (cadr p1))
          (x2 (car p2)) (y2 (cadr p2)))
     (if (= y1 y2)
-        (list 'h y1 (cons (min x1 x2) (max x1 x2)))
-        (list 'v x1 (cons (min y1 y2) (max y1 y2))))))
-;; And add the other pair to a related boundary in the other direction
-;; This uses the merging algorithm from a previous puzzle
+        (list 'horz y1 (cons (min x1 x2) (max x1 x2)))
+        (list 'vert x1 (cons (min y1 y2) (max y1 y2))))))
 
+(define (split-segments segments)
+  (list (filter (lambda (s) (eq? (car s) 'horz)) segments)
+        (filter (lambda (s) (eq? (car s) 'vert)) segments)))
+
+(define (insert-range new existing)
+  (cond
+   ((null? existing)
+    (list new))
+   ((< (cdr (car existing)) (car new))
+    (cons (car existing) (insert-range new (cdr existing))))
+   ((> (car (car existing)) (cdr new))
+    (cons new existing))
+   (else
+    (insert-range
+     (cons (min (car new) (car (car existing)))
+           (max (cdr new) (cdr (car existing))))
+     (cdr existing)))))
+
+(define (add-segment-to-boundaries seg boundaries)
+  (let* ((fixed-coord (cadr seg))
+         (range (caddr seg))
+         (existing (assoc fixed-coord boundaries)))
+    (if existing
+        (let ((merged (insert-range range (cdr existing))))
+          (cons (cons fixed-coord merged)
+                (filter (lambda (e) (not (= (car e) fixed-coord))) boundaries)))
+        (cons (cons fixed-coord (list range)) boundaries))))
+
+(define (group-segments segs)
+  (sort (fold add-segment-to-boundaries '() segs)
+        (lambda (a b) (< (car a) (car b)))))
 
 ;; With all these helpers in place, we run the main program.
 (let* ((tiles (load-input-file "example.txt"))
        (extracted-pairs (consecutive-pairs tiles))
+       (segments (map classify-segment extracted-pairs))
+       (split (split-segments segments))
+       (h-segs (car split))
+       (v-segs (cadr split))
+       (h-boundaries (group-segments h-segs))
+       (v-boundaries (group-segments v-segs))
        ;; (tile (make-tile tiles))
        ;; (pair-area (make-pair-area tiles))
        ;; (pair-refs (unordered-pairs (iota (length tiles))))
@@ -80,9 +125,7 @@
        ;; (largest-pair-area (car sorted-pair-areas))
        )
 
-  (display tiles)
+  (display h-boundaries)
   (newline)
-  (display extracted-pairs)
-  (newline)
-  (display (map classify-segment extracted-pairs))
+  (display v-boundaries)
   (newline))
