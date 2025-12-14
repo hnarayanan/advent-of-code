@@ -211,8 +211,10 @@
                           (pair-area (car pair-ref) (cdr pair-ref)))
                         pair-refs))
        (sorted-pair-areas (sort pair-areas (lambda (x y) (> (cdr x) (cdr y)))))
-       (valid-pair-areas (filter (lambda (pair-area) (pair-area-valid? pair-area tiles h-boundaries v-boundaries)) sorted-pair-areas))
-       (largest-pair-area (car valid-pair-areas)))
+       (largest-pair-area (find (lambda (pair-area) (pair-area-valid? pair-area tiles h-boundaries v-boundaries))
+                                sorted-pair-areas)))
 
   (newline)
-  (display (cdr largest-pair-area)))
+  (display tiles)
+  (newline)
+  (display largest-pair-area))
