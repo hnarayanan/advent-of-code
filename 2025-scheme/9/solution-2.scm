@@ -18,9 +18,9 @@
 ;; First we define some helper procedures around generating sets of
 ;; pairs of tiles and the areas they cover.
 (define (area t1 t2)
-  (let ((dx (1+ (- (car t1) (car t2))))
-        (dy (1+ (- (cadr t1) (cadr t2)))))
-    (abs (* dx dy))))
+  (let ((dx (1+ (abs (- (car  t1) (car  t2)))))
+        (dy (1+ (abs (- (cadr t1) (cadr t2))))))
+    (* dx dy)))
 
 (define (make-tile tiles)
   (lambda (tile-ref)
@@ -103,16 +103,19 @@
   (sort (fold add-segment-to-boundaries '() segs)
         (lambda (a b) (< (car a) (car b)))))
 
-(define (in-range? n low high)
+(define (in-range-closed? n low high)
+  (and (<= low n) (<= n high)))
+
+(define (in-range-open-high? n low high)
   (and (<= low n) (< n high)))
 
 (define (count-crossings-right v-boundaries px py)
   (count (lambda (entry)
            (let ((x (car entry))
                  (ranges (cdr entry)))
-             (and (>= x px)
+             (and (> x px)
                   (any (lambda (range)
-                         (in-range? py (car range) (cdr range)))
+                         (in-range-open-high? py (car range) (cdr range)))
                        ranges))))
          v-boundaries))
 
@@ -120,9 +123,9 @@
   (count (lambda (entry)
            (let ((x (car entry))
                  (ranges (cdr entry)))
-             (and (<= x px)
+             (and (< x px)
                   (any (lambda (range)
-                         (in-range? py (car range) (cdr range)))
+                         (in-range-open-high? py (car range) (cdr range)))
                        ranges))))
          v-boundaries))
 
@@ -130,9 +133,9 @@
   (count (lambda (entry)
            (let ((y (car entry))
                  (ranges (cdr entry)))
-             (and (>= y py)
+             (and (> y py)
                   (any (lambda (range)
-                         (in-range? px (car range) (cdr range)))
+                         (in-range-open-high? px (car range) (cdr range)))
                        ranges))))
          h-boundaries))
 
@@ -140,9 +143,9 @@
   (count (lambda (entry)
            (let ((y (car entry))
                  (ranges (cdr entry)))
-             (and (<= y py)
+             (and (< y py)
                   (any (lambda (range)
-                         (in-range? px (car range) (cdr range)))
+                         (in-range-open-high? px (car range) (cdr range)))
                        ranges))))
          h-boundaries))
 
@@ -152,7 +155,7 @@
                (ranges (cdr entry)))
            (and (= py y)
                 (any (lambda (range)
-                       (<= (car range) px (cdr range)))
+                       (in-range-closed? px (car range) (cdr range)))
                      ranges))))
        h-boundaries))
 
@@ -162,7 +165,7 @@
                (ranges (cdr entry)))
            (and (= px x)
                 (any (lambda (range)
-                       (<= (car range) py (cdr range)))
+                       (in-range-closed? py (car range) (cdr range)))
                      ranges))))
        v-boundaries))
 
@@ -175,6 +178,8 @@
               (left (count-crossings-left v-boundaries px py))
               (down (count-crossings-down h-boundaries px py))
               (up (count-crossings-up h-boundaries px py)))
+          (display (list 'checking p 'r right 'l left 'd down 'u up))
+          (newline)
           (and (odd? right) (odd? left) (odd? down) (odd? up))))))
 
 ;; The following procedure comes in with two tile references
@@ -197,7 +202,7 @@
 
 
 ;; With all these helpers in place, we run the main program.
-(let* ((tiles (load-input-file "input.txt"))
+(let* ((tiles (load-input-file "example.txt"))
        (extracted-pairs (consecutive-pairs tiles))
        (segments (map classify-segment extracted-pairs))
        (split (split-segments segments))
@@ -214,7 +219,10 @@
        (largest-pair-area (find (lambda (pair-area) (pair-area-valid? pair-area tiles h-boundaries v-boundaries))
                                 sorted-pair-areas)))
 
-  (newline)
   (display tiles)
+  (newline)
+  (display h-boundaries)
+  (newline)
+  (display v-boundaries)
   (newline)
   (display largest-pair-area))
