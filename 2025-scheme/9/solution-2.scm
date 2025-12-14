@@ -169,7 +169,7 @@
                      ranges))))
        v-boundaries))
 
-(define (corner-valid? p h-boundaries v-boundaries)
+(define (point-valid? p h-boundaries v-boundaries)
   (let ((px (car p))
         (py (cadr p)))
     (or (on-h-boundary? px py h-boundaries)
@@ -178,31 +178,49 @@
               (left (count-crossings-left v-boundaries px py))
               (down (count-crossings-down h-boundaries px py))
               (up (count-crossings-up h-boundaries px py)))
-          (display (list 'checking p 'r right 'l left 'd down 'u up))
-          (newline)
           (and (odd? right) (odd? left) (odd? down) (odd? up))))))
 
-;; The following procedure comes in with two tile references
-;; representing two corners of a rectangle. By definition, these two
-;; are red tiles and fall on the boundary of the polygon made by the
-;; red tiles. We don't need to check them. What we do instead is to
-;; construct the remaining pair of opposite corners and check if
-;; they're both valid.
+(define (edge-h-valid? y xmin xmax h-boundaries v-boundaries)
+  (let loop ((x xmin))
+    (cond
+     ((> x xmax) #t)
+     ((point-valid? (list x y) h-boundaries v-boundaries)
+      (loop (+ x 1)))
+     (else #f))))
+
+(define (edge-v-valid? x ymin ymax h-boundaries v-boundaries)
+  (let loop ((y ymin))
+    (cond
+     ((> y ymax) #t)
+     ((point-valid? (list x y) h-boundaries v-boundaries)
+      (loop (+ y 1)))
+     (else #f))))
+
+;; To check if a rectangular area is valid, we walk every boundary and
+;; check if it's valid. We first check the corners and immediately
+;; bail if any of them are not valid.
 (define (pair-area-valid? pair-area tiles h-boundaries v-boundaries)
   (let* ((tile (make-tile tiles))
          (tile-1-ref (car (car pair-area)))
          (tile-2-ref (cdr (car pair-area)))
          (tile-1 (tile tile-1-ref))
          (tile-2 (tile tile-2-ref))
-         (opp-tile-1 (list (car tile-1) (cadr tile-2)))
-         (opp-tile-2 (list (car tile-2) (cadr tile-1))))
+         (xmin (min (car tile-1) (car tile-2)))
+         (xmax (max (car tile-1) (car tile-2)))
+         (ymin (min (cadr tile-1) (cadr tile-2)))
+         (ymax (max (cadr tile-1) (cadr tile-2))))
     (and
-     (corner-valid? opp-tile-1 h-boundaries v-boundaries)
-     (corner-valid? opp-tile-2 h-boundaries v-boundaries))))
-
+     (point-valid? (list xmin ymin) h-boundaries v-boundaries)
+     (point-valid? (list xmin ymax) h-boundaries v-boundaries)
+     (point-valid? (list xmax ymin) h-boundaries v-boundaries)
+     (point-valid? (list xmax ymax) h-boundaries v-boundaries)
+     (edge-h-valid? ymin xmin xmax h-boundaries v-boundaries)
+     (edge-h-valid? ymax xmin xmax h-boundaries v-boundaries)
+     (edge-v-valid? xmin ymin ymax h-boundaries v-boundaries)
+     (edge-v-valid? xmax ymin ymax h-boundaries v-boundaries))))
 
 ;; With all these helpers in place, we run the main program.
-(let* ((tiles (load-input-file "example.txt"))
+(let* ((tiles (load-input-file "input.txt"))
        (extracted-pairs (consecutive-pairs tiles))
        (segments (map classify-segment extracted-pairs))
        (split (split-segments segments))
@@ -219,10 +237,4 @@
        (largest-pair-area (find (lambda (pair-area) (pair-area-valid? pair-area tiles h-boundaries v-boundaries))
                                 sorted-pair-areas)))
 
-  (display tiles)
-  (newline)
-  (display h-boundaries)
-  (newline)
-  (display v-boundaries)
-  (newline)
   (display largest-pair-area))
