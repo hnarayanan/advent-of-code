@@ -32,9 +32,6 @@
            (a (area (tile tile-1-ref) (tile tile-2-ref))))
       (cons (cons tile-1-ref tile-2-ref) a))))
 
-(define (get-pair pair-area)
-  (list (car (car pair-area)) (cdr (car pair-area))))
-
 (define (unordered-pairs lst)
   (if (null? lst)
       '()
@@ -106,6 +103,28 @@
   (sort (fold add-segment-to-boundaries '() segs)
         (lambda (a b) (< (car a) (car b)))))
 
+(define (corner-valid? p)
+  #t)
+
+;; The following procedure comes in with two tile references
+;; representing two corners of a rectangle. By definition, these two
+;; are red tiles and fall on the boundary of the polygon made by the
+;; red tiles. We don't need to check them. What we do instead is to
+;; construct the remaining pair of opposite corners and check if
+;; they're both valid.
+(define (pair-area-valid? pair-area tiles)
+  (let* ((tile (make-tile tiles))
+         (tile-1-ref (car (car pair-area)))
+         (tile-2-ref (cdr (car pair-area)))
+         (tile-1 (tile tile-1-ref))
+         (tile-2 (tile tile-2-ref))
+         (opp-tile-1 (list (car tile-1) (cadr tile-2)))
+         (opp-tile-2 (list (car tile-2) (cadr tile-1))))
+    (and
+     (corner-valid? opp-tile-1)
+     (corner-valid? opp-tile-2))))
+
+
 ;; With all these helpers in place, we run the main program.
 (let* ((tiles (load-input-file "example.txt"))
        (extracted-pairs (consecutive-pairs tiles))
@@ -115,17 +134,20 @@
        (v-segs (cadr split))
        (h-boundaries (group-segments h-segs))
        (v-boundaries (group-segments v-segs))
-       ;; (tile (make-tile tiles))
-       ;; (pair-area (make-pair-area tiles))
-       ;; (pair-refs (unordered-pairs (iota (length tiles))))
-       ;; (pair-areas (map (lambda (pair-ref)
-       ;;                    (pair-area (car pair-ref) (cdr pair-ref)))
-       ;;                  pair-refs))
-       ;; (sorted-pair-areas (sort pair-areas (lambda (x y) (> (cdr x) (cdr y)))))
+       (pair-area (make-pair-area tiles))
+       (pair-refs (unordered-pairs (iota (length tiles))))
+       (pair-areas (map (lambda (pair-ref)
+                          (pair-area (car pair-ref) (cdr pair-ref)))
+                        pair-refs))
+       (sorted-pair-areas (sort pair-areas (lambda (x y) (> (cdr x) (cdr y)))))
        ;; (largest-pair-area (car sorted-pair-areas))
        )
 
-  (display h-boundaries)
+;;  (display h-boundaries)
   (newline)
-  (display v-boundaries)
-  (newline))
+;;  (display v-boundaries)
+  (newline)
+;;  (display sorted-pair-areas)
+  (newline)
+  (pair-area-valid? (car sorted-pair-areas) tiles)
+  )
